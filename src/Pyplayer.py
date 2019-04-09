@@ -126,12 +126,17 @@ class Application(Application_ui):
             else:
                 time.sleep(0.1)
                 # print("Sleeeeeeeeping")
+        print("Plaing:Stoped-ALL Thread Destorying")
 
     def NextSong_Cmd(self, event=None):
         #TODO, Please finish the function here!
         print("NextSong_Cmd")
         global playing
         playing = False
+        # pygame.mixer.quit()
+        global num
+        if len(res) == num:
+            num = 0
         try:
             # 停止播放，如果已停止，
             # 再次停止时会抛出异常，所以放在异常处理结构中
@@ -139,14 +144,12 @@ class Application(Application_ui):
             # pygame.mixer.quit()
         except:
             pass
-        # pygame.mixer.quit()
-        global num
-        if len(res) == num:
-            num = 0
-        playing = True
-        self.Play['text']='暂停'
-        t = threading.Thread(target=self.Player)
-        t.start()
+        if not playing:
+            # # 创建一个线程来播放音乐，当前主线程用来接收用户操作
+            playing = True
+            self.Play['text']='暂停'
+            t = threading.Thread(target=self.Player)
+            t.start()
         pass
 
     def PreSong_Cmd(self, event=None):
@@ -154,13 +157,6 @@ class Application(Application_ui):
         print("PreSong_Cmd")
         global playing
         playing = False
-        try:
-            # 停止播放，如果已停止，
-            # 再次停止时会抛出异常，所以放在异常处理结构中
-            pygame.mixer.music.stop()
-            # pygame.mixer.quit()
-        except:
-            pass
         global num
         if num == 0:
             num = len(res)-2
@@ -169,11 +165,19 @@ class Application(Application_ui):
         else:
             num -=2
         print("Pre"+str(num))
-        playing = True
-        self.Play['text']='暂停'
-        # 创建一个线程来播放音乐，当前主线程用来接收用户操作
-        t = threading.Thread(target=self.Player)
-        t.start()
+        try:
+            # 停止播放，如果已停止，
+            # 再次停止时会抛出异常，所以放在异常处理结构中
+            pygame.mixer.music.stop()
+            # pygame.mixer.quit()
+        except:
+            pass
+        if not playing:
+            # # 创建一个线程来播放音乐，当前主线程用来接收用户操作
+            playing = True
+            self.Play['text']='暂停'
+            t = threading.Thread(target=self.Player)
+            t.start()
         pass
 
     def Stop_Cmd(self, event=None):
@@ -203,6 +207,7 @@ class Application(Application_ui):
             global playing
             playing = True
             # 创建一个线程来播放音乐，当前主线程用来接收用户操作
+            self.Play['text']='暂停'
             t = threading.Thread(target=self.Player)
             t.start()
         elif self.Play['text'] == '暂停':
@@ -214,6 +219,12 @@ class Application(Application_ui):
             pygame.mixer.music.unpause()
             self.Play['text']='暂停'
             pass
+        if not playing:
+            # # 创建一个线程来播放音乐，当前主线程用来接收用户操作
+            playing = True
+            self.Play['text']='暂停'
+            t = threading.Thread(target=self.Player)
+            t.start()
 
     def OpenPath_Cmd(self, event=None):
         #TODO, Please finish the function here!
@@ -232,15 +243,17 @@ class Application(Application_ui):
                     \
             if music.endswith(('.mp3', '.wav', '.ogg'))]
         res = musics
-        self.Set_ResaultBox(res)
-        t = threading.Thread(target=self.Player)
-        t.start()
+        if not playing:
+            # # 创建一个线程来播放音乐，当前主线程用来接收用户操作
+            playing = True
+            self.Play['text']='暂停'
+            t = threading.Thread(target=self.Player)
+            t.start()
 
     def Search_Cmd(self, event=None):
         #TODO, Please finish the function here!
         print("Search_Cmd")
         pass
-
     
     def Set_ResaultBox(self,res,event=None):
         # clear all recent values
@@ -269,6 +282,7 @@ class Application(Application_ui):
             if num>len(res)-1:
                 print("err num > max")
                 num=0
+        
         try:
             # 停止播放，如果已停止，
             # 再次停止时会抛出异常，所以放在异常处理结构中
@@ -277,10 +291,12 @@ class Application(Application_ui):
         except:
             print("ERRRRRRRRR")
             pass
-        # playing = True
-        # # 创建一个线程来播放音乐，当前主线程用来接收用户操作
-        # t = threading.Thread(target=self.Player)
-        # t.start()
+        if not playing:
+            # # 创建一个线程来播放音乐，当前主线程用来接收用户操作
+            playing = True
+            t = threading.Thread(target=self.Player)
+            t.start()
+            pass
 
 if __name__ == "__main__":
     top = Tk()
