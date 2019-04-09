@@ -2,9 +2,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
-*/tmp/*
+tmp/*
 */*.frm
-*/download/*
+download/*
 # C extensions
 *.so
 
