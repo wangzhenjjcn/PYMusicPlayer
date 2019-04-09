@@ -321,8 +321,7 @@ def download163SharePlayList(url):
 root = tkinter.Tk()
 root.title('WangZhenPlayer V0.0.0.0.0.0')
 #窗口大小及位置
-root.geometry('460x600+500+100')
-
+root.geometry('800x600+500+100')
 root.resizable(True, True)
 folder = ''
 res = []
@@ -331,7 +330,6 @@ now_music = ''
 #添加文件函数
 def buttonChooseClick():
     # 选择要播放的音乐文件夹
-
     global folder
     global res
     if not folder:
@@ -354,18 +352,11 @@ def buttonChooseClick():
     if not folder:
         return
     global playing
-
     playing = True
-
     # 根据情况禁用和启用相应的按钮
-
     buttonPlay['state'] = 'normal'
-
     buttonStop['state'] = 'normal'
-
     #buttonPause['state'] = 'normal'
-
-
     pause_resume.set('播放')
 #播放音乐函数
 def play():
@@ -571,6 +562,6 @@ labelName.place(x=10, y=30, width=260, height=20)
 # HORIZONTAL表示为水平放置，默认为竖直,竖直为vertical
 s = tkinter.Scale(root, label='音量', from_=0, to=1, orient=tkinter.HORIZONTAL,
              length=240, showvalue=0, tickinterval=2, resolution=0.1, command=control_voice)
-s.place(x=50, y=50 ,width=200)
+s.place(x=400, y=10 ,width=200)
 # 启动消息循环
 root.mainloop() 
