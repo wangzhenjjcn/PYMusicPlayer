@@ -263,6 +263,9 @@ class Application(Application_ui):
             datas = []
             page = 1
             data = searchMusicByTitle(word, page)
+            for song in data:
+                if word not in song['author'] and word not in song['title']:
+                    data.remove(song)
             while(len(data) > 0) and searching:
                 for song in data:
                     espace = ""
