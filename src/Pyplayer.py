@@ -1,7 +1,7 @@
 ﻿#!/usr/bin/env python
 #-*- coding:utf-8 -*-
 
-import os, sys
+import os, sys,time,pygame
 try:
     from tkinter import *
 except ImportError:  #Python 2.x
@@ -19,14 +19,24 @@ else:  #Python 3.x
     from tkinter.font import Font
     from tkinter.ttk import *
     from tkinter.messagebox import *
-    #import tkinter.filedialog as tkFileDialog
-    #import tkinter.simpledialog as tkSimpleDialog    #askstring()
+    import tkinter.filedialog as tkFileDialog
+    import tkinter.simpledialog as tkSimpleDialog    #askstring()
+    import tkinter
+
+folder = ''
+res = []
+num = 0
+now_music = ''
+
+
+
+
 
 class Application_ui(Frame):
     #这个类仅实现界面生成功能，具体事件处理代码在子类Application中。
     def __init__(self, master=None):
         Frame.__init__(self, master)
-        self.master.title('Form1')
+        self.master.title('Myazure音乐播放器DesignedByWangZhen<wangzhenjjcn@gmail.com>')
         self.master.geometry('837x494')
         self.master.resizable(0,0)
         self.createWidgets()
@@ -67,11 +77,15 @@ class Application_ui(Frame):
         self.ResaultBoxVar = StringVar(value='ResaultBox')
         self.ResaultBoxFont = Font(font=('宋体',9))
         self.ResaultBox = Listbox(self.top, listvariable=self.ResaultBoxVar, font=self.ResaultBoxFont)
-        self.ResaultBox.place(relx=0., rely=0.162, relwidth=1.005, relheight=0.737)
+        self.ResaultBox.place(relx=0., rely=0.162, relwidth=1.005, relheight=0.785)
 
         self.style.configure('Line1.TSeparator',background='#000000')
         self.Line1 = Separator(self.top, orient='horizontal', style='Line1.TSeparator')
         self.Line1.place(relx=0., rely=0.065, relwidth=1.004, relheight=0.002)
+
+        self.style.configure('CopyRight.TLabel',anchor='w', font=('宋体',9))
+        self.CopyRight = Label(self.top, text='DesignedByWangZhen', style='CopyRight.TLabel')
+        self.CopyRight.place(relx=0., rely=0.972, relwidth=0.135, relheight=0.034)
 
 
 class Application(Application_ui):
@@ -81,26 +95,80 @@ class Application(Application_ui):
 
     def NextSong_Cmd(self, event=None):
         #TODO, Please finish the function here!
+        print("NextSong_Cmd")
         pass
 
     def PreSong_Cmd(self, event=None):
         #TODO, Please finish the function here!
+        print("PreSong_Cmd")
         pass
 
     def Stop_Cmd(self, event=None):
         #TODO, Please finish the function here!
+        print("Stop_Cmd")
         pass
 
     def Play_Cmd(self, event=None):
         #TODO, Please finish the function here!
+        print("Play_Cmd")
         pass
 
     def OpenPath_Cmd(self, event=None):
         #TODO, Please finish the function here!
+        print("OpenPath_Cmd")
+        global folder
+        global res
+        if not folder:
+            folder = tkFileDialog.askdirectory()
+            musics = [folder + '\\' + music
+                    for music in os.listdir(folder) \
+                            \
+                    if music.endswith(('.mp3', '.wav', '.ogg'))]
+            res = musics
+            print(res)
+        if not folder:
+            return
+        playing = True
+        if len(res):
+            pygame.mixer.init()
+        global num
+        while playing:
+            if not pygame.mixer.music.get_busy():
+                # 随机播放一首歌曲
+                nextMusic = res[num]
+                print(nextMusic)
+                print(num)
+                pygame.mixer.music.load(nextMusic.encode())
+                # 播放一次
+                pygame.mixer.music.play(1)
+                #print(len(res)-1)
+                if len(res)-1 == num:
+                    num = 0
+                else:
+                    num = num + 1
+                nextMusic = nextMusic.split('\\')[1:]
+                print('playing....' + ''.join(nextMusic))
+            else:
+                time.sleep(0.1)
+        #     ret = []
+        #     for i in musics:
+        #         ret.append(i.split('\\')[1:])
+        #         res.append(i.replace('\\','/'))
+        #     var2 = tkinter.StringVar()
+        #     var2.set(ret)
+        #     print (var2)
+        # global playing
+        # playing = True
+        # 根据情况禁用和启用相应的按钮
+        # buttonPlay['state'] = 'normal'
+        # buttonStop['state'] = 'normal'
+        # buttonPause['state'] = 'normal'
+        # pause_resume.set('播放')
         pass
 
     def Search_Cmd(self, event=None):
         #TODO, Please finish the function here!
+        print("Search_Cmd")
         pass
 
 if __name__ == "__main__":
