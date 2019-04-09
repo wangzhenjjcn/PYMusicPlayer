@@ -1,7 +1,7 @@
 ﻿#!/usr/bin/env python
 #-*- coding:utf-8 -*-
 
-import os, sys,time,pygame,threading,re,datetime,json
+import os, sys,time,pygame,threading,re,datetime,json,requests
 try:
     from tkinter import *
 except ImportError:  #Python 2.x
@@ -9,8 +9,10 @@ except ImportError:  #Python 2.x
     from Tkinter import *
     from tkFont import Font
     from ttk import *
+    import cookielib
     #Usage:showinfo/warning/error,askquestion/okcancel/yesno/retrycancel
     from tkMessageBox import *
+    print(f"python2.")
     #Usage:f=tkFileDialog.askopenfilename(initialdir='E:/Python')
     #import tkFileDialog
     #import tkSimpleDialog
@@ -22,13 +24,49 @@ else:  #Python 3.x
     import tkinter.filedialog as tkFileDialog
     import tkinter.simpledialog as tkSimpleDialog    #askstring()
     import tkinter
+    import http.cookiejar as cookielib
+    print(f"python3.")
 
 folder = ''
 res = []
 num = 0
+searching=False
 now_music = ''
+playing=False
 
+songList = {}
+webSession = requests.session()
+download_path = "./download/"
+tmp_path = "./tmp/"
+provider = "qq"
+ptname = "网易云音乐"
+defaulturl = "http://music.sonimei.cn/"
+if not os.path.exists(download_path):
+    os.mkdir(download_path)
+if not os.path.exists(tmp_path):
+    os.mkdir(tmp_path)
+webSession.cookies = cookielib.LWPCookieJar(filename=tmp_path+"cookie.txt")
 
+defaultHeader = {
+    'upgrade-insecure-requests': "1",
+    'user-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
+    'dnt': "1",
+    'accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+    'accept-encoding': "gzip, deflate",
+    'accept-language': "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6",
+    'cache-control': "no-cache"
+}
+ajaxheaders = {
+    'upgrade-insecure-requests': "1",
+    'user-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
+    'dnt': "1",
+    'accept-encoding': "gzip, deflate",
+    'x-requested-with': "XMLHttpRequest",
+    'accept-language': "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6",
+    'cache-control': "no-cache",
+    'accept': "application/json, text/javascript, */*; q=0.01",
+}
+ 
 
 
 
@@ -91,14 +129,148 @@ class Application_ui(Frame):
 
 
 # def searchKeywords(word):
-    
+# TODO add FUnC
 #     return word
+def searchMusicById(mid):
+    global ptname, provider, download_path
+    postData = {
+        "input": str(mid),
+        "filter": "id",
+        "type": provider,
+        "page": 1,
+    }
+    responseRes = webSession.post(
+        defaulturl, data=postData, headers=ajaxheaders, verify=False)
+    data = json.loads(responseRes.text)
+    # print(f"statusCode = {responseRes.status_code}"+":"+defaulturl)
+
+    if responseRes.status_code != 200:
+        return []
+    #print(f"text = {responseRes.text.encode('utf-8').decode('unicode_escape')}")
+    try:
+        r_file = open("./tmp/"+str(data['data'][0]['songid']) +
+                      "-"+str(data['data'][0]['type']), "w", encoding="utf-8")
+        r_file.write(str(data))
+        r_file.flush()
+        return data['data']
+    except:
+        responseRes.text
+        return data['data']
+    finally:
+        r_file.close()
+        return data['data']
+
+
+def searchMusicByTitle(title, page):
+    global ptname, provider, download_path
+    postData = {
+        "input": str(title),
+        "filter": "name",
+        "type": provider,
+        "page": page,
+    }
+    responseRes = webSession.post(
+        defaulturl, data=postData, headers=ajaxheaders, verify=False)
+    data = json.loads(responseRes.text)
+    # print(f"statusCode = {responseRes.status_code}"+":"+defaulturl)
+    # print(f"text = {responseRes.text.encode('utf-8').decode('unicode_escape')}")
+
+    if responseRes.status_code != 200:
+        return []
+    try:
+        r_file = open("./tmp/"+str(title)+"-"+str(page)+"-" +
+                      str(provider), "w", encoding="utf-8")
+        r_file.write(str(data))
+        r_file.flush()
+        return data['data']
+    except:
+        return data['data']
+    finally:
+        r_file.close()
+        return data['data']
+
+    
+def downloadMusicByHttpRequest(filename,url):
+    global ptname, provider, download_path
+    if not os.path.exists(download_path):
+        os.mkdir(download_path)
+    if(url == None or "http" not in url):
+        print("urlerr:"+str(url))
+        return 3
+    headers = {'User-Agent':"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
+    'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+    'Upgrade-Insecure-Requests':'1'}
+    _filename = download_path+re.sub(r'[\/:*?"<>|]','-',filename)
+    if  os.path.exists(_filename):
+        print("已存在：文件大小："+str(os.path.getsize(_filename)))
+        if os.path.getsize(_filename)>1024000:
+            return 0    
+        else:
+            print("小于1MB的重新下载中")
+    # print("download:"+url+"  as  "+_filename)
+    response = requests.get(url, headers=headers)
+    try:
+        with open(_filename.encode('UTF-8').decode("UTF-8"), 'wb') as f:
+            f.write(response.content)
+            f.flush()
+            f.close()
+            return 0
+    except Exception as e:
+        print(e)
+        pass
+    finally:
+        f.close()
+
+
+
+
 
 class Application(Application_ui):
     #这个类实现具体的事件处理回调函数。界面生成代码在Application_ui中。
                 
     def __init__(self, master=None):
         Application_ui.__init__(self, master)
+
+    def Searcher(self,event=None):
+        global num,res,playing,searching,searchingword
+        searching = True
+        self.Search['text']='搜索中'
+        while searching:
+            global ptname, provider, download_path,downloadall,musics,res
+            musics=[]
+            res=[]
+            self.ResaultBox.delete(0,END)
+            word= self.Text1.get()
+            print(word)
+            print("当前平台："+str(ptname)+"-"+str(provider)+"关键字："+str(word))
+            datas = []
+            page = 1
+            data = searchMusicByTitle(word, page)
+            while(len(data) > 0) and searching:
+                for song in data:
+                    espace = ""
+                    for n in range(1, 30-len(song['author'])):
+                        espace += " "
+                    print(song['author']+espace+song['title'])
+                    self.ResaultBox.insert(END,song['author']+espace+song['title'])
+                    url=song['url']
+                    if (song['url'] == None or "http" not in song['url']):
+                        print("urlerr:"+str(song['url']))
+                        url = 'http://music.163.com/song/media/outer/url?id=' +str(song['songid'])+ '.mp3'
+                    downloadMusicByHttpRequest(str(word)+"-"+str(self.ResaultBox.size())+".mp3",url)
+                    musics.append(download_path+str(word)+"-"+str(self.ResaultBox.size())+".mp3")
+                    res=musics
+                    print(song['url'])
+                datas.extend(data)
+                page += 1
+                data = searchMusicByTitle(word, page)
+                for song in data:
+                    if word not in song['author'] and word not in song['title']:
+                        data.remove(song)
+                print("当前平台："+str(ptname)+"-"+str(provider) +
+                    "关键字："+str(word)+"一共检测到："+str(len(datas))+"条")
+            searching=False
+            self.Search['text']='搜索'
 
     def Player(self,event=None):
         global num,res,playing
@@ -184,6 +356,16 @@ class Application(Application_ui):
     def Stop_Cmd(self, event=None):
         #TODO, Please finish the function here!
         print("Stop_Cmd")
+        global playing
+        playing = False
+        try:
+            # 停止播放，如果已停止，
+            # 再次停止时会抛出异常，所以放在异常处理结构中
+            pygame.mixer.music.stop()
+            pygame.mixer.quit()
+        except:
+            print("ERRRRRRRRR")
+            pass
         return 
 
     def Play_Cmd(self, event=None):
@@ -245,6 +427,7 @@ class Application(Application_ui):
                     \
             if music.endswith(('.mp3', '.wav', '.ogg'))]
         res = musics
+        print(res)
         self.Set_ResaultBox(res)
         if not playing:
             self.Set_ResaultBox(res)
@@ -256,8 +439,17 @@ class Application(Application_ui):
         return 
 
     def Search_Cmd(self, event=None):
+        global searching
         #TODO, Please finish the function here!
         print("Search_Cmd")
+        if not searching:
+            # # 创建一个线程来播放音乐，当前主线程用来接收用户操作
+            searching = True
+            self.Search['text']='搜索中'
+            s = threading.Thread(target=self.Searcher)
+            s.start()
+        else:
+            searching=False
         return 
     
     def Set_ResaultBox(self,res,event=None):
@@ -265,11 +457,11 @@ class Application(Application_ui):
         self.ResaultBox.delete(0,END)
         # add song name to box
         for item in res:
-            self.ResaultBox.insert(END,item)
-            if self.ResaultBox.size() > 1:
-                self.ResaultBox.itemconfig(0,fg="#4B0082")  
-            else:
-                self.ResaultBox.itemconfig(self.ResaultBox.size()-1,bg="#EDEDED")
+            self.ResaultBox.insert(END,item.split('\\')[1:])
+            # if self.ResaultBox.size() > 1:
+            #     self.ResaultBox.itemconfig(0,fg="#4B0082")  
+            # else:
+            #     self.ResaultBox.itemconfig(self.ResaultBox.size()-1,bg="#EDEDED")
         return 
  
     def ResaultBoxDoubleClick(self, event):

@@ -385,7 +385,6 @@ def play():
 #点击播放
 def buttonPlayClick():
     buttonNext['state'] = 'normal'
-
     buttonPrev['state'] = 'normal'
     # 选择要播放的音乐文件夹
     if pause_resume.get() == '播放':
