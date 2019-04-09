@@ -115,20 +115,19 @@ class Application(Application_ui):
         global num
         while playing:
             if not pygame.mixer.music.get_busy():
-                print("now:"+str(num))
-                nextMusic = res[num]
-                print("now:"+str(nextMusic))
-                pygame.mixer.music.load(nextMusic.encode())
+                print("now:"+str(num)+"     "+res[num])
+                currentMusic = res[num]
+                print("now:"+str(currentMusic))
+                pygame.mixer.music.load(currentMusic.encode())
                 pygame.mixer.music.play(num)
                 print("all:"+str(len(res)-1))
                 if len(res)-1 == num:
                     num = 0
                 else:
                     num = num + 1
-                    print("next:"+str(num))
-                nextMusic = nextMusic.split('\\')[1:]
-                print('playing....' + ''.join(nextMusic))
-                
+                    print("next:"+str(num)+"   "+res[num])
+                currentMusic = currentMusic.split('\\')[1:]
+                print('playing....' + ''.join(currentMusic))
             else:
                 time.sleep(0.1)
 
@@ -140,6 +139,30 @@ class Application(Application_ui):
     def PreSong_Cmd(self, event=None):
         #TODO, Please finish the function here!
         print("PreSong_Cmd")
+        global playing
+        playing = False
+        try:
+            # 停止播放，如果已停止，
+            # 再次停止时会抛出异常，所以放在异常处理结构中
+            pygame.mixer.music.stop()
+            # pygame.mixer.quit()
+        except:
+            pass
+        global num
+        if num == 0:
+            num = len(res)-2
+            #num -= 1
+        elif  num == len(res) -1:
+            num -=2
+        else:
+            num -=2
+            #num -= 1
+        print("Pre"+str(num))
+        playing = True
+        self.Play['text']='暂停'
+        # 创建一个线程来播放音乐，当前主线程用来接收用户操作
+        t = threading.Thread(target=self.Player)
+        t.start()
         pass
 
     def Stop_Cmd(self, event=None):
@@ -177,7 +200,6 @@ class Application(Application_ui):
 
     def OpenPath_Cmd(self, event=None):
         #TODO, Please finish the function here!
-        
         print("OpenPath_Cmd")
         global folder
         global res
