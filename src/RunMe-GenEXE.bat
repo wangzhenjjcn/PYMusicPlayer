@@ -1,5 +1,5 @@
 @echo off
 chcp 65001
-pyinstaller Pyplayer.py
+pyinstaller -F -w  Pyplayer.py  
 pause();
  

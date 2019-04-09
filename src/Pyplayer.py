@@ -33,7 +33,8 @@ num = 0
 searching=False
 now_music = ''
 playing=False
-
+urls=[]
+names=[]
 songList = {}
 webSession = requests.session()
 download_path = "./download/"
@@ -74,7 +75,7 @@ class Application_ui(Frame):
     #这个类仅实现界面生成功能，具体事件处理代码在子类Application中。
     def __init__(self, master=None):
         Frame.__init__(self, master)
-        self.master.title('Myazure音乐播放器DesignedByWangZhen<wangzhenjjcn@gmail.com>')
+        self.master.title('王振的音乐下载软件<WangZhen@20190409v1.0>')
         self.master.geometry('837x494')
         self.master.resizable(0,0)
         self.createWidgets()
@@ -112,7 +113,7 @@ class Application_ui(Frame):
         self.Search = Button(self.top, text='搜索', command=self.Search_Cmd, style='Search.TButton')
         self.Search.place(relx=0.908, rely=0., relwidth=0.102, relheight=0.054)
 
-        self.ResaultBoxVar = StringVar(value='ResaultBox')
+        self.ResaultBoxVar = StringVar(value='点击打开选择音乐目录播放音乐，或者在最上面输入关键字点击搜索检索音乐下载')
         self.ResaultBoxFont = Font(font=('宋体',9))
         self.ResaultBox = Listbox(self.top, listvariable=self.ResaultBoxVar, font=self.ResaultBoxFont)
         self.ResaultBox.place(relx=0., rely=0.162, relwidth=1.005, relheight=0.785)
@@ -126,13 +127,21 @@ class Application_ui(Frame):
         self.CopyRight = Label(self.top, text='DesignedByWangZhen', style='CopyRight.TLabel')
         self.CopyRight.place(relx=0., rely=0.972, relwidth=0.135, relheight=0.034)
 
+        self.style.configure('Download.TButton',font=('宋体',9))
+        self.Download = Button(self.top, text='下载所有', command=self.Download_Cmd, style='Download.TButton')
+        self.Download.place(relx=0.889, rely=0.081, relwidth=0.106, relheight=0.067)
 
 
 # def searchKeywords(word):
 # TODO add FUnC
 #     return word
 def searchMusicById(mid):
-    global ptname, provider, download_path
+    global ptname, provider, download_path,tmp_path
+    if not os.path.exists(download_path):
+        os.mkdir(download_path)
+    if not os.path.exists(tmp_path):
+        os.mkdir(tmp_path)
+
     postData = {
         "input": str(mid),
         "filter": "id",
@@ -162,7 +171,11 @@ def searchMusicById(mid):
 
 
 def searchMusicByTitle(title, page):
-    global ptname, provider, download_path
+    global ptname, provider, download_path,tmp_path
+    if not os.path.exists(download_path):
+        os.mkdir(download_path)
+    if not os.path.exists(tmp_path):
+        os.mkdir(tmp_path)
     postData = {
         "input": str(title),
         "filter": "name",
@@ -191,9 +204,11 @@ def searchMusicByTitle(title, page):
 
     
 def downloadMusicByHttpRequest(filename,url):
-    global ptname, provider, download_path
+    global ptname, provider, download_path,tmp_path
     if not os.path.exists(download_path):
         os.mkdir(download_path)
+    if not os.path.exists(tmp_path):
+        os.mkdir(tmp_path)
     if(url == None or "http" not in url):
         print("urlerr:"+str(url))
         return 3
@@ -232,7 +247,9 @@ class Application(Application_ui):
         Application_ui.__init__(self, master)
 
     def Searcher(self,event=None):
-        global num,res,playing,searching,searchingword
+        global num,res,playing,searching,searchingword,urls,names
+        urls=[]
+        names=[]
         searching = True
         self.Search['text']='搜索中'
         while searching:
@@ -257,8 +274,13 @@ class Application(Application_ui):
                     if (song['url'] == None or "http" not in song['url']):
                         print("urlerr:"+str(song['url']))
                         url = 'http://music.163.com/song/media/outer/url?id=' +str(song['songid'])+ '.mp3'
-                    downloadMusicByHttpRequest(str(word)+"-"+str(self.ResaultBox.size())+".mp3",url)
-                    musics.append(download_path+str(word)+"-"+str(self.ResaultBox.size())+".mp3")
+                        if provider !="netease":
+                            continue;
+                    urls.append(url)
+                    names.append(str(song['author']+"-"+song['title']+".mp3"))
+                    
+                    # downloadMusicByHttpRequest(str(song['author']+"-"+song['title']+".mp3"),url)
+                    musics.append(download_path+str(song['author']+"-"+song['title']+".mp3"))
                     res=musics
                     print(song['url'])
                 datas.extend(data)
@@ -269,6 +291,10 @@ class Application(Application_ui):
                         data.remove(song)
                 print("当前平台："+str(ptname)+"-"+str(provider) +
                     "关键字："+str(word)+"一共检测到："+str(len(datas))+"条")
+                if self.ResaultBox.size() > 1:
+                    for i in range(0,self.ResaultBox.size()):
+                        self.ResaultBox.itemconfig(i,bg="#999999")  
+                        self.ResaultBox.itemconfig(i,fg="#000000")
             searching=False
             self.Search['text']='搜索'
 
@@ -281,8 +307,21 @@ class Application(Application_ui):
         while playing:
             if not pygame.mixer.music.get_busy():
                 nextMusic = res[num]
+                try:
+                    downloadMusicByHttpRequest(names[num],urls[num])
+                except :
+                    print("dlerr")
                 print("now:"+str(num)+"     "+str(nextMusic))
                 try:
+                    if self.ResaultBox.size() > 1:
+                        for i in range(0,self.ResaultBox.size()):
+                            self.ResaultBox.itemconfig(i,bg="#999999")  
+                            self.ResaultBox.itemconfig(i,fg="#000000")
+                    else:
+                        self.ResaultBox.itemconfig(self.ResaultBox.size()-1,bg="#999999")
+                        self.ResaultBox.itemconfig(self.ResaultBox.size()-1,fg="#000000")
+                    self.ResaultBox.itemconfig(num,fg="#FFFFFF")
+                    self.ResaultBox.itemconfig(num,bg="#6600FF")
                     pygame.mixer.music.load(nextMusic.encode())
                     pygame.mixer.music.play(1)
                 except :
@@ -294,9 +333,22 @@ class Application(Application_ui):
                 print("all:"+str(len(res)-1))
                 print("next:"+str(num)+"   "+res[num])
                 nextMusic = nextMusic.split('\\')[1:]
+                try:
+                    downloadMusicByHttpRequest(names[num],urls[num])
+                except :
+                    print("dlerr")
                 print('playing....' + ''.join(nextMusic))
             else:
                 time.sleep(0.1)
+                seta=num-1
+                if len(res)-1 == num:
+                    seta = 0
+                if seta==-1:
+                    seta=0
+                if seta> self.ResaultBox.size():
+                    seta=0
+                self.ResaultBox.itemconfig(seta,fg="#FFFFFF")
+                self.ResaultBox.itemconfig(seta,bg="#6600FF")
                 # print("Sleeeeeeeeping")
         print("Plaing:Stoped-ALL Thread Destorying")
         return 
@@ -417,9 +469,9 @@ class Application(Application_ui):
         global res
         global playing
         global num
+        folder = tkFileDialog.askdirectory()
         playing = False
         print(folder)
-        folder = tkFileDialog.askdirectory()
         if not folder:
             return
         musics = [folder + '\\' + music
@@ -471,11 +523,15 @@ class Application(Application_ui):
         print(filename)
         global playing
         # playing = False
-        global num,res
+        global num,res,names,urls
         if len(res) == num:
             num = 0
         else:
             num=int(self.ResaultBox.curselection()[0])
+            try:
+                downloadMusicByHttpRequest(names[num],urls[num])
+            except :
+                print("dlerr")            
             print("NUM:self.ResaultBox.curselection()++++ "+str(num))
             if num>len(res)-1:
                 print("err num > max")
@@ -496,8 +552,42 @@ class Application(Application_ui):
             pass
         return 
 
+    def Download_Cmd(self, event=None):
+        #TODO, Please finish the function here!
+        print("Download_Cmd")
+        global urls,names
+        self.Download['text']='下载中'
+        for i in range(0,len(urls)):
+            downloadMusicByHttpRequest(names[i],urls[i])
+            pass
+        pass
+    
+def closeWindow():
+    # 修改变量，结束线程中的循环
+    global playing
+    playing = False
+    time.sleep(0.3)
+    try:
+        # 停止播放，如果已停止，
+        # 再次停止时会抛出异常，所以放在异常处理结构中
+        pygame.mixer.music.stop()
+        pygame.mixer.quit()
+    except:
+        pass
+    try:
+        sys.exit(0)
+    except:
+        print( 'die')
+        os._exit(0)
+    finally:
+        print( 'cleanup')
+    
+  
+
+
 if __name__ == "__main__":
     top = Tk()
+    top.protocol('WM_DELETE_WINDOW', closeWindow)
     Application(top).mainloop()
     try: top.destroy()
     except: 
