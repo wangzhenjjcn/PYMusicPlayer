@@ -115,16 +115,17 @@ class Application(Application_ui):
         global num
         while playing:
             if not pygame.mixer.music.get_busy():
+                print("now:"+str(num))
                 nextMusic = res[num]
-                print(nextMusic)
-                print(num)
+                print("now:"+str(nextMusic))
                 pygame.mixer.music.load(nextMusic.encode())
                 pygame.mixer.music.play(num)
-                print(len(res)-1)
+                print("all:"+str(len(res)-1))
                 if len(res)-1 == num:
                     num = 0
                 else:
                     num = num + 1
+                    print("next:"+str(num))
                 nextMusic = nextMusic.split('\\')[1:]
                 print('playing....' + ''.join(nextMusic))
                 
@@ -176,17 +177,18 @@ class Application(Application_ui):
 
     def OpenPath_Cmd(self, event=None):
         #TODO, Please finish the function here!
+        
         print("OpenPath_Cmd")
         global folder
         global res
         global playing
+        playing = False
         print(folder)
         if not folder:
             folder = tkFileDialog.askdirectory()
         global num
         t = threading.Thread(target=self.Player)
         t.start()
-        
         if not folder:
             return
 
@@ -210,15 +212,17 @@ class Application(Application_ui):
     def ResaultBoxDoubleClick(self, event):
         #获取所点击的文件的名称
         print(self.ResaultBox.curselection()[0] ) 
-
-
-
         filename =  self.ResaultBox.get(self.ResaultBox.curselection())
         print(filename)
         global playing
         playing = False
-        pygame.mixer.music.stop()
-        pygame.mixer.quit()
+        try:
+            # 停止播放，如果已停止，
+            # 再次停止时会抛出异常，所以放在异常处理结构中
+            pygame.mixer.music.stop()
+            # pygame.mixer.quit()
+        except:
+            pass
         global num
         if len(res) == num:
             num = 0
