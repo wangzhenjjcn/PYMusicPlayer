@@ -101,39 +101,52 @@ class Application(Application_ui):
         Application_ui.__init__(self, master)
 
     def Player(self,event=None):
-        musics = [folder + '\\' + music
-                    for music in os.listdir(folder) \
-                            \
-                    if music.endswith(('.mp3', '.wav', '.ogg'))]
-        res = musics
+        global num,res,playing
         playing = True
         self.Play['text']='暂停'
         if len(res):
             pygame.mixer.init()
-            self.Set_ResaultBox(res)
-        
-        global num
         while playing:
             if not pygame.mixer.music.get_busy():
-                print("now:"+str(num)+"     "+res[num])
-                currentMusic = res[num]
-                print("now:"+str(currentMusic))
-                pygame.mixer.music.load(currentMusic.encode())
-                pygame.mixer.music.play(num)
-                print("all:"+str(len(res)-1))
+                nextMusic = res[num]
+                print("now:"+str(num)+"     "+str(nextMusic))
+                try:
+                    pygame.mixer.music.load(nextMusic.encode())
+                    pygame.mixer.music.play(1)
+                except :
+                    print("ERRR")
                 if len(res)-1 == num:
                     num = 0
                 else:
                     num = num + 1
-                    print("next:"+str(num)+"   "+res[num])
-                currentMusic = currentMusic.split('\\')[1:]
-                print('playing....' + ''.join(currentMusic))
+                print("all:"+str(len(res)-1))
+                print("next:"+str(num)+"   "+res[num])
+                nextMusic = nextMusic.split('\\')[1:]
+                print('playing....' + ''.join(nextMusic))
             else:
                 time.sleep(0.1)
+                # print("Sleeeeeeeeping")
 
     def NextSong_Cmd(self, event=None):
         #TODO, Please finish the function here!
         print("NextSong_Cmd")
+        global playing
+        playing = False
+        try:
+            # 停止播放，如果已停止，
+            # 再次停止时会抛出异常，所以放在异常处理结构中
+            pygame.mixer.music.stop()
+            # pygame.mixer.quit()
+        except:
+            pass
+        # pygame.mixer.quit()
+        global num
+        if len(res) == num:
+            num = 0
+        playing = True
+        self.Play['text']='暂停'
+        t = threading.Thread(target=self.Player)
+        t.start()
         pass
 
     def PreSong_Cmd(self, event=None):
@@ -151,12 +164,10 @@ class Application(Application_ui):
         global num
         if num == 0:
             num = len(res)-2
-            #num -= 1
         elif  num == len(res) -1:
             num -=2
         else:
             num -=2
-            #num -= 1
         print("Pre"+str(num))
         playing = True
         self.Play['text']='暂停'
@@ -178,9 +189,15 @@ class Application(Application_ui):
         # 选择要播放的音乐文件夹
         if self.Play['text'] == '播放':
             self.Play['text']='暂停'
-            global folder
+            global folder,res
             if not folder:
                 folder = tkFileDialog.askdirectory()
+                musics = [folder + '\\' + music
+                    for music in os.listdir(folder) \
+                            \
+                    if music.endswith(('.mp3', '.wav', '.ogg'))]
+                res = musics
+                self.Set_ResaultBox(res)
             if not folder:
                 return
             global playing
@@ -204,15 +221,20 @@ class Application(Application_ui):
         global folder
         global res
         global playing
+        global num
         playing = False
         print(folder)
-        if not folder:
-            folder = tkFileDialog.askdirectory()
-        global num
-        t = threading.Thread(target=self.Player)
-        t.start()
+        folder = tkFileDialog.askdirectory()
         if not folder:
             return
+        musics = [folder + '\\' + music
+            for music in os.listdir(folder) \
+                    \
+            if music.endswith(('.mp3', '.wav', '.ogg'))]
+        res = musics
+        self.Set_ResaultBox(res)
+        t = threading.Thread(target=self.Player)
+        t.start()
 
     def Search_Cmd(self, event=None):
         #TODO, Please finish the function here!
@@ -237,23 +259,28 @@ class Application(Application_ui):
         filename =  self.ResaultBox.get(self.ResaultBox.curselection())
         print(filename)
         global playing
-        playing = False
+        # playing = False
+        global num,res
+        if len(res) == num:
+            num = 0
+        else:
+            num=int(self.ResaultBox.curselection()[0])
+            print("NUM:self.ResaultBox.curselection()++++ "+str(num))
+            if num>len(res)-1:
+                print("err num > max")
+                num=0
         try:
             # 停止播放，如果已停止，
             # 再次停止时会抛出异常，所以放在异常处理结构中
             pygame.mixer.music.stop()
             # pygame.mixer.quit()
         except:
+            print("ERRRRRRRRR")
             pass
-        global num
-        if len(res) == num:
-            num = 0
-        else:
-            num=int(self.ResaultBox.curselection()[0])
-        playing = True
-        # 创建一个线程来播放音乐，当前主线程用来接收用户操作
-        t = threading.Thread(target=self.Player)
-        t.start()
+        # playing = True
+        # # 创建一个线程来播放音乐，当前主线程用来接收用户操作
+        # t = threading.Thread(target=self.Player)
+        # t.start()
 
 if __name__ == "__main__":
     top = Tk()
