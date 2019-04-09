@@ -1,7 +1,7 @@
 ﻿#!/usr/bin/env python
 #-*- coding:utf-8 -*-
 
-import os, sys,time,pygame
+import os, sys,time,pygame,threading,re,datetime,json
 try:
     from tkinter import *
 except ImportError:  #Python 2.x
@@ -78,6 +78,7 @@ class Application_ui(Frame):
         self.ResaultBoxFont = Font(font=('宋体',9))
         self.ResaultBox = Listbox(self.top, listvariable=self.ResaultBoxVar, font=self.ResaultBoxFont)
         self.ResaultBox.place(relx=0., rely=0.162, relwidth=1.005, relheight=0.785)
+        self.ResaultBox.bind('<Double-Button-1>',self.ResaultBoxDoubleClick)
 
         self.style.configure('Line1.TSeparator',background='#000000')
         self.Line1 = Separator(self.top, orient='horizontal', style='Line1.TSeparator')
@@ -88,10 +89,47 @@ class Application_ui(Frame):
         self.CopyRight.place(relx=0., rely=0.972, relwidth=0.135, relheight=0.034)
 
 
+
+def searchKeywords(word):
+    
+    return word
+
 class Application(Application_ui):
     #这个类实现具体的事件处理回调函数。界面生成代码在Application_ui中。
+                
     def __init__(self, master=None):
         Application_ui.__init__(self, master)
+
+    def Player(self,event=None):
+        musics = [folder + '\\' + music
+                    for music in os.listdir(folder) \
+                            \
+                    if music.endswith(('.mp3', '.wav', '.ogg'))]
+        res = musics
+        playing = True
+        self.Play['text']='暂停'
+        if len(res):
+            pygame.mixer.init()
+            self.Set_ResaultBox(res)
+        
+        global num
+        while playing:
+            if not pygame.mixer.music.get_busy():
+                nextMusic = res[num]
+                print(nextMusic)
+                print(num)
+                pygame.mixer.music.load(nextMusic.encode())
+                pygame.mixer.music.play(num)
+                print(len(res)-1)
+                if len(res)-1 == num:
+                    num = 0
+                else:
+                    num = num + 1
+                nextMusic = nextMusic.split('\\')[1:]
+                print('playing....' + ''.join(nextMusic))
+                
+            else:
+                time.sleep(0.1)
 
     def NextSong_Cmd(self, event=None):
         #TODO, Please finish the function here!
@@ -111,65 +149,85 @@ class Application(Application_ui):
     def Play_Cmd(self, event=None):
         #TODO, Please finish the function here!
         print("Play_Cmd")
-        pass
+        self.NextSong['state'] = 'normal'
+        self.PreSong['state'] = 'normal'
+        # 选择要播放的音乐文件夹
+        if self.Play['text'] == '播放':
+            self.Play['text']='暂停'
+            global folder
+            if not folder:
+                folder = tkFileDialog.askdirectory()
+            if not folder:
+                return
+            global playing
+            playing = True
+            # 创建一个线程来播放音乐，当前主线程用来接收用户操作
+            t = threading.Thread(target=self.Player)
+            t.start()
+        elif self.Play['text'] == '暂停':
+            #pygame.mixer.init()
+            pygame.mixer.music.pause()
+            self.Play['text']='继续'
+        elif self.Play['text'] == '继续':
+            #pygame.mixer.init()
+            pygame.mixer.music.unpause()
+            self.Play['text']='暂停'
+            pass
 
     def OpenPath_Cmd(self, event=None):
         #TODO, Please finish the function here!
         print("OpenPath_Cmd")
         global folder
         global res
+        global playing
+        print(folder)
         if not folder:
             folder = tkFileDialog.askdirectory()
-            musics = [folder + '\\' + music
-                    for music in os.listdir(folder) \
-                            \
-                    if music.endswith(('.mp3', '.wav', '.ogg'))]
-            res = musics
-            print(res)
+        global num
+        t = threading.Thread(target=self.Player)
+        t.start()
+        
         if not folder:
             return
-        playing = True
-        if len(res):
-            pygame.mixer.init()
-        global num
-        while playing:
-            if not pygame.mixer.music.get_busy():
-                # 随机播放一首歌曲
-                nextMusic = res[num]
-                print(nextMusic)
-                print(num)
-                pygame.mixer.music.load(nextMusic.encode())
-                # 播放一次
-                pygame.mixer.music.play(1)
-                #print(len(res)-1)
-                if len(res)-1 == num:
-                    num = 0
-                else:
-                    num = num + 1
-                nextMusic = nextMusic.split('\\')[1:]
-                print('playing....' + ''.join(nextMusic))
-            else:
-                time.sleep(0.1)
-        #     ret = []
-        #     for i in musics:
-        #         ret.append(i.split('\\')[1:])
-        #         res.append(i.replace('\\','/'))
-        #     var2 = tkinter.StringVar()
-        #     var2.set(ret)
-        #     print (var2)
-        # global playing
-        # playing = True
-        # 根据情况禁用和启用相应的按钮
-        # buttonPlay['state'] = 'normal'
-        # buttonStop['state'] = 'normal'
-        # buttonPause['state'] = 'normal'
-        # pause_resume.set('播放')
-        pass
 
     def Search_Cmd(self, event=None):
         #TODO, Please finish the function here!
         print("Search_Cmd")
         pass
+
+    
+    def Set_ResaultBox(self,res,event=None):
+        # clear all recent values
+        self.ResaultBox.delete(0,END)
+        # add song name to box
+        for item in res:
+            self.ResaultBox.insert(END,item)
+            if self.ResaultBox.size() > 1:
+                self.ResaultBox.itemconfig(0,fg="#4B0082")  
+            else:
+                self.ResaultBox.itemconfig(self.ResaultBox.size()-1,bg="#EDEDED")
+ 
+    def ResaultBoxDoubleClick(self, event):
+        #获取所点击的文件的名称
+        print(self.ResaultBox.curselection()[0] ) 
+
+
+
+        filename =  self.ResaultBox.get(self.ResaultBox.curselection())
+        print(filename)
+        global playing
+        playing = False
+        pygame.mixer.music.stop()
+        pygame.mixer.quit()
+        global num
+        if len(res) == num:
+            num = 0
+        else:
+            num=int(self.ResaultBox.curselection()[0])
+        playing = True
+        # 创建一个线程来播放音乐，当前主线程用来接收用户操作
+        t = threading.Thread(target=self.Player)
+        t.start()
 
 if __name__ == "__main__":
     top = Tk()
