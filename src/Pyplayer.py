@@ -90,9 +90,9 @@ class Application_ui(Frame):
 
 
 
-def searchKeywords(word):
+# def searchKeywords(word):
     
-    return word
+#     return word
 
 class Application(Application_ui):
     #这个类实现具体的事件处理回调函数。界面生成代码在Application_ui中。
@@ -127,6 +127,7 @@ class Application(Application_ui):
                 time.sleep(0.1)
                 # print("Sleeeeeeeeping")
         print("Plaing:Stoped-ALL Thread Destorying")
+        return 
 
     def NextSong_Cmd(self, event=None):
         #TODO, Please finish the function here!
@@ -150,7 +151,7 @@ class Application(Application_ui):
             self.Play['text']='暂停'
             t = threading.Thread(target=self.Player)
             t.start()
-        pass
+        return 
 
     def PreSong_Cmd(self, event=None):
         #TODO, Please finish the function here!
@@ -178,12 +179,12 @@ class Application(Application_ui):
             self.Play['text']='暂停'
             t = threading.Thread(target=self.Player)
             t.start()
-        pass
+        return 
 
     def Stop_Cmd(self, event=None):
         #TODO, Please finish the function here!
         print("Stop_Cmd")
-        pass
+        return 
 
     def Play_Cmd(self, event=None):
         #TODO, Please finish the function here!
@@ -225,6 +226,7 @@ class Application(Application_ui):
             self.Play['text']='暂停'
             t = threading.Thread(target=self.Player)
             t.start()
+        return 
 
     def OpenPath_Cmd(self, event=None):
         #TODO, Please finish the function here!
@@ -243,17 +245,20 @@ class Application(Application_ui):
                     \
             if music.endswith(('.mp3', '.wav', '.ogg'))]
         res = musics
+        self.Set_ResaultBox(res)
         if not playing:
+            self.Set_ResaultBox(res)
             # # 创建一个线程来播放音乐，当前主线程用来接收用户操作
             playing = True
             self.Play['text']='暂停'
             t = threading.Thread(target=self.Player)
             t.start()
+        return 
 
     def Search_Cmd(self, event=None):
         #TODO, Please finish the function here!
         print("Search_Cmd")
-        pass
+        return 
     
     def Set_ResaultBox(self,res,event=None):
         # clear all recent values
@@ -265,6 +270,7 @@ class Application(Application_ui):
                 self.ResaultBox.itemconfig(0,fg="#4B0082")  
             else:
                 self.ResaultBox.itemconfig(self.ResaultBox.size()-1,bg="#EDEDED")
+        return 
  
     def ResaultBoxDoubleClick(self, event):
         #获取所点击的文件的名称
@@ -282,7 +288,6 @@ class Application(Application_ui):
             if num>len(res)-1:
                 print("err num > max")
                 num=0
-        
         try:
             # 停止播放，如果已停止，
             # 再次停止时会抛出异常，所以放在异常处理结构中
@@ -297,9 +302,12 @@ class Application(Application_ui):
             t = threading.Thread(target=self.Player)
             t.start()
             pass
+        return 
 
 if __name__ == "__main__":
     top = Tk()
     Application(top).mainloop()
     try: top.destroy()
-    except: pass
+    except: 
+        print("MAIN ERR")
+        pass
