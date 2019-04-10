@@ -85,6 +85,18 @@ class Application_ui(Frame):
 
         self.style = Style()
 
+        self.Slider1 = Scale(self.top, orient='horizontal', from_=0, to=600)
+        self.Slider1.place(relx=0.564, rely=0.081, relwidth=0.317, relheight=0.067)
+
+        self.ProgressBar1Var = StringVar(value='')
+        self.ProgressBar1 = Progressbar(self.top, orient='horizontal', maximum=100, variable=self.ProgressBar1Var)
+        self.ProgressBar1.place(relx=0.153, rely=0.955, relwidth=0.833, relheight=0.034)
+
+        self.ProviderList = ['qq','网易云音乐','酷狗','酷我','虾米','百度',]
+        self.Provider = Combobox(self.top, values=self.ProviderList, font=('宋体',9))
+        self.Provider.place(relx=0.707, rely=0., relwidth=0.183, relheight=0.04)
+        self.Provider.set(self.ProviderList[0])
+
         self.style.configure('NextSong.TButton',font=('宋体',9))
         self.NextSong = Button(self.top, text='下一首', command=self.NextSong_Cmd, style='NextSong.TButton')
         self.NextSong.place(relx=0.459, rely=0.081, relwidth=0.106, relheight=0.067)
@@ -107,7 +119,8 @@ class Application_ui(Frame):
 
         self.Text1Var = StringVar(value='')
         self.Text1 = Entry(self.top, textvariable=self.Text1Var, font=('宋体',9))
-        self.Text1.place(relx=0., rely=0., relwidth=0.909, relheight=0.051)
+        self.Text1.place(relx=0., rely=0., relwidth=0.689, relheight=0.051)
+        self.Text1.bind('<Return>',self.Search_Cmd)
 
         self.style.configure('Search.TButton',font=('宋体',9))
         self.Search = Button(self.top, text='搜索', command=self.Search_Cmd, style='Search.TButton')
@@ -135,6 +148,7 @@ class Application_ui(Frame):
 # def searchKeywords(word):
 # TODO add FUnC
 #     return word
+
 def searchMusicById(mid):
     global ptname, provider, download_path,tmp_path
     if not os.path.exists(download_path):
@@ -152,7 +166,6 @@ def searchMusicById(mid):
         defaulturl, data=postData, headers=ajaxheaders, verify=False)
     data = json.loads(responseRes.text)
     # print(f"statusCode = {responseRes.status_code}"+":"+defaulturl)
-
     if responseRes.status_code != 200:
         return []
     #print(f"text = {responseRes.text.encode('utf-8').decode('unicode_escape')}")
@@ -237,14 +250,12 @@ def downloadMusicByHttpRequest(filename,url):
         f.close()
 
 
-
-
-
 class Application(Application_ui):
     #这个类实现具体的事件处理回调函数。界面生成代码在Application_ui中。
                 
     def __init__(self, master=None):
         Application_ui.__init__(self, master)
+        
 
     def Searcher(self,event=None):
         global num,res,playing,searching,searchingword,urls,names
@@ -413,6 +424,7 @@ class Application(Application_ui):
         print("Stop_Cmd")
         global playing
         playing = False
+        self.Play['text']='播放'
         try:
             # 停止播放，如果已停止，
             # 再次停止时会抛出异常，所以放在异常处理结构中
@@ -429,19 +441,18 @@ class Application(Application_ui):
         self.NextSong['state'] = 'normal'
         self.PreSong['state'] = 'normal'
         # 选择要播放的音乐文件夹
+        global folder,res
         if self.Play['text'] == '播放':
-            self.Play['text']='暂停'
-            global folder,res
-            if not folder:
-                folder = tkFileDialog.askdirectory()
-                musics = [folder + '\\' + music
-                    for music in os.listdir(folder) \
-                            \
-                    if music.endswith(('.mp3', '.wav', '.ogg'))]
-                res = musics
-                self.Set_ResaultBox(res)
+            folder = tkFileDialog.askdirectory()
             if not folder:
                 return
+            self.Play['text']='暂停'
+            musics = [folder + '\\' + music
+                for music in os.listdir(folder) \
+                        \
+                if music.endswith(('.mp3', '.wav', '.ogg'))]
+            res = musics
+            self.Set_ResaultBox(res)
             global playing
             playing = True
             # 创建一个线程来播放音乐，当前主线程用来接收用户操作
