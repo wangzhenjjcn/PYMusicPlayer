@@ -1,7 +1,17 @@
 ﻿#!/usr/bin/env python
 #-*- coding:utf-8 -*-
 
-import os, sys,time,pygame,threading,re,datetime,json,requests
+import datetime
+import json
+import os
+import re
+import sys
+import threading
+import time
+
+import pygame
+import requests
+
 try:
     from tkinter import *
 except ImportError:  #Python 2.x
@@ -144,7 +154,6 @@ class Application_ui(Frame):
         self.Download = Button(self.top, text='下载所有', command=self.Download_Cmd, style='Download.TButton')
         self.Download.place(relx=0.889, rely=0.081, relwidth=0.106, relheight=0.067)
 
-
 # def searchKeywords(word):
 # TODO add FUnC
 #     return word
@@ -155,7 +164,6 @@ def searchMusicById(mid):
         os.mkdir(download_path)
     if not os.path.exists(tmp_path):
         os.mkdir(tmp_path)
-
     postData = {
         "input": str(mid),
         "filter": "id",
@@ -251,14 +259,17 @@ def downloadMusicByHttpRequest(filename,url):
 
 
 class Application(Application_ui):
-    #这个类实现具体的事件处理回调函数。界面生成代码在Application_ui中。
-                
+    #这个类实现具体的事件处理回调函数。界面生成代码在Application_ui中。              
     def __init__(self, master=None):
         Application_ui.__init__(self, master)
-        
+
+    def checkProvider(self,event=None):
+        global ptname, provider
+        print("checkProvider")
+        # self.Provider
 
     def Searcher(self,event=None):
-        global num,res,playing,searching,searchingword,urls,names
+        global num,res,playing,searching,urls,names
         urls=[]
         names=[]
         searching = True
@@ -289,10 +300,9 @@ class Application(Application_ui):
                         print("urlerr:"+str(song['url']))
                         url = 'http://music.163.com/song/media/outer/url?id=' +str(song['songid'])+ '.mp3'
                         if provider !="netease":
-                            continue;
+                            continue
                     urls.append(url)
                     names.append(str(song['author']+"-"+song['title']+".mp3"))
-                    
                     # downloadMusicByHttpRequest(str(song['author']+"-"+song['title']+".mp3"),url)
                     musics.append(download_path+str(song['author']+"-"+song['title']+".mp3"))
                     res=musics
@@ -361,8 +371,9 @@ class Application(Application_ui):
                     seta=0
                 if seta> self.ResaultBox.size():
                     seta=0
-                self.ResaultBox.itemconfig(seta,fg="#FFFFFF")
-                self.ResaultBox.itemconfig(seta,bg="#6600FF")
+                if num!=0:
+                    self.ResaultBox.itemconfig(seta,fg="#FFFFFF")
+                    self.ResaultBox.itemconfig(seta,bg="#6600FF")
                 # print("Sleeeeeeeeping")
         print("Plaing:Stoped-ALL Thread Destorying")
         return 
@@ -429,7 +440,7 @@ class Application(Application_ui):
             # 停止播放，如果已停止，
             # 再次停止时会抛出异常，所以放在异常处理结构中
             pygame.mixer.music.stop()
-            pygame.mixer.quit()
+        
         except:
             print("ERRRRRRRRR")
             pass
@@ -532,6 +543,7 @@ class Application(Application_ui):
  
     def ResaultBoxDoubleClick(self, event):
         #获取所点击的文件的名称
+        
         print(self.ResaultBox.curselection()[0] ) 
         filename =  self.ResaultBox.get(self.ResaultBox.curselection())
         print(filename)
@@ -542,11 +554,11 @@ class Application(Application_ui):
             num = 0
         else:
             num=int(self.ResaultBox.curselection()[0])
+            print("NUM:self.ResaultBox.curselection()++++ "+str(num))
             try:
                 downloadMusicByHttpRequest(names[num],urls[num])
             except :
                 print("dlerr")            
-            print("NUM:self.ResaultBox.curselection()++++ "+str(num))
             if num>len(res)-1:
                 print("err num > max")
                 num=0
@@ -560,6 +572,7 @@ class Application(Application_ui):
             pass
         if not playing:
             # # 创建一个线程来播放音乐，当前主线程用来接收用户操作
+            print("创建一个线程来播放音乐，当前主线程用来接收用户操作")
             playing = True
             t = threading.Thread(target=self.Player)
             t.start()
