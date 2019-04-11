@@ -310,20 +310,22 @@ class Application(Application_ui):
     def Searcher(self,event=None):
         self.checkProvider()
         global num,res,playing,searching,urls,names,source
+        global ptname, provider, download_path
         source="net"
+        self.ResaultBox.delete(0,END)
         urls=[]
         names=[]
+        musics=[]
+        num=0
+        res=[]
+        playing=False
         searching = True
         self.Search['text']='搜索中'
+        word= self.Text1.get()
+        print(word)
+        datas = []
         while searching:
-            global ptname, provider, download_path,downloadall,musics,res
-            musics=[]
-            res=[]
-            self.ResaultBox.delete(0,END)
-            word= self.Text1.get()
-            print(word)
             print("当前平台："+str(ptname)+"-"+str(provider)+"关键字："+str(word))
-            datas = []
             page = 1
             data = searchMusicByTitle(word, page)
             for song in data:
@@ -614,7 +616,6 @@ class Application(Application_ui):
  
     def ResaultBoxDoubleClick(self, event):
         #获取所点击的文件的名称
-        
         print(self.ResaultBox.curselection()[0] ) 
         filename =  self.ResaultBox.get(self.ResaultBox.curselection())
         print(filename)
