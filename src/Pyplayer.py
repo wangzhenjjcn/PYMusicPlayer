@@ -349,8 +349,11 @@ class Application(Application_ui):
                     # downloadMusicByHttpRequest(str(song['author']+"-"+song['title']+".mp3"),url)
                     musics.append(download_path+str(song['author']+"-"+song['title']+".mp3"))
                     res=musics
-                    print(song['url'])
                 datas.extend(data)
+                if self.ResaultBox.size() > 1:
+                    for i in range(0,self.ResaultBox.size()):
+                        self.ResaultBox.itemconfig(i,bg="#999999")  
+                        self.ResaultBox.itemconfig(i,fg="#000000")
                 page += 1
                 data = searchMusicByTitle(word, page)
                 for song in data:
@@ -358,10 +361,6 @@ class Application(Application_ui):
                         data.remove(song)
                 print("当前平台："+str(ptname)+"-"+str(provider) +
                     "关键字："+str(word)+"一共检测到："+str(len(datas))+"条")
-                if self.ResaultBox.size() > 1:
-                    for i in range(0,self.ResaultBox.size()):
-                        self.ResaultBox.itemconfig(i,bg="#999999")  
-                        self.ResaultBox.itemconfig(i,fg="#000000")
             searching=False
             self.Search['text']='搜索'
 
@@ -587,13 +586,12 @@ class Application(Application_ui):
 
     def Search_Cmd(self, event=None):
         global searching,source,playing
-        playing=False
         source= "net"
         self.checkProvider()
         #TODO, Please finish the function here!
         print("Search_Cmd")
         if not searching:
-            # # 创建一个线程来播放音乐，当前主线程用来接收用户操作
+            # # 创建一个线程来检索，当前主线程用来接收用户操作
             searching = True
             self.Search['text']='搜索中'
             s = threading.Thread(target=self.Searcher)
@@ -616,12 +614,11 @@ class Application(Application_ui):
  
     def ResaultBoxDoubleClick(self, event):
         #获取所点击的文件的名称
-        print(self.ResaultBox.curselection()[0] ) 
+        global playing,source
+        global num,res,names,urls
         filename =  self.ResaultBox.get(self.ResaultBox.curselection())
         print(filename)
-        global playing,source
-        # playing = False
-        global num,res,names,urls
+        
         if len(res) == num:
             num = 0
         else:
@@ -638,10 +635,13 @@ class Application(Application_ui):
         try:
             # 停止播放，如果已停止，
             # 再次停止时会抛出异常，所以放在异常处理结构中
-            pygame.mixer.music.stop()
+            if pygame.mixer.music.get_busy():
+                
+                pygame.mixer.music.stop()
             # pygame.mixer.quit()
         except:
             print("ERRRRRRRRR")
+            playing=False
             pass
         if not playing:
             # # 创建一个线程来播放音乐，当前主线程用来接收用户操作
