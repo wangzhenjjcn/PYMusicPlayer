@@ -362,7 +362,7 @@ class Application(Application_ui):
         if len(res):
             pygame.mixer.init()
         while playing:
-            if not pygame.mixer.music.get_busy():
+            if  not pygame.mixer.music.get_busy():
                 nextMusic = res[num]
                 try:
                     if source=="net":
@@ -400,10 +400,13 @@ class Application(Application_ui):
                 print('playing....' + ''.join(nextMusic))
             else:
                 time.sleep(0.1)
+                if songtime==0:
+                    continue
                 # pygame.mixer.music
-                print(str(int(600*(pygame.mixer.music.get_pos()/(songtime*1000)))))
+                # print(str(int(600*(pygame.mixer.music.get_pos()/(songtime*1000)))))
                 self.Slider1.set(int(600*(pygame.mixer.music.get_pos()/(songtime*1000))))
-                self.ProgressBar1.setvar("variable",StringVar(value=(str(int(100*(pygame.mixer.music.get_pos()/(songtime*1000)))))))
+                self.ProgressBar1['value'] = int(100*(pygame.mixer.music.get_pos()/(songtime*1000)))
+                # self.ProgressBar1.setvar("variable",StringVar(value=(str(int(100*(pygame.mixer.music.get_pos()/(songtime*1000)))))))
                 # Slider1.set(pygame.mixer.music.)
                 # ProgressBar1.set(key, value, coded_value)
                 seta=num-1
