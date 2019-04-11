@@ -51,6 +51,7 @@ names=[]
 songList = {}
 webSession = requests.session()
 download_path = "./download/"
+floder_path= download_path
 tmp_path = "./tmp/"
 provider = "qq"
 ptname = "网易云音乐"
@@ -101,7 +102,7 @@ class Application_ui(Frame):
         self.Slider1 = Scale(self.top, orient='horizontal', from_=0, to=600)
         self.Slider1.place(relx=0.564, rely=0.081, relwidth=0.317, relheight=0.067)
 
-        self.ProgressBar1Var = StringVar(value='')
+        self.ProgressBar1Var = StringVar(value='100')
         self.ProgressBar1 = Progressbar(self.top, orient='horizontal', maximum=100, variable=self.ProgressBar1Var)
         self.ProgressBar1.place(relx=0.153, rely=0.955, relwidth=0.833, relheight=0.034)
 
@@ -370,9 +371,7 @@ class Application(Application_ui):
                     print("dlerr")
                 print("now:"+str(num)+"     "+str(nextMusic))
                 try:
-                    # songtime = librosa.get_duration(filename=names[num])
-                    print("0000000000000")
-                    print(songtime)
+                    songtime = librosa.get_duration(filename=nextMusic)
                     pygame.mixer.music.load(nextMusic.encode())
                     pygame.mixer.music.play(1)
                     if self.ResaultBox.size() > 1:
@@ -384,15 +383,15 @@ class Application(Application_ui):
                         self.ResaultBox.itemconfig(self.ResaultBox.size()-1,fg="#000000")
                     self.ResaultBox.itemconfig(num,fg="#FFFFFF")
                     self.ResaultBox.itemconfig(num,bg="#6600FF")
-                except :
-                    print("ERRR")
+                except Exception as e:
+                    print(e)
                 if len(res)-1 == num:
                     num = 0
                 else:
                     num = num + 1
                 print("all:"+str(len(res)-1))
                 print("next:"+str(num)+"   "+res[num])
-                nextMusic = nextMusic.split('\\')[1:]
+                nextMusic = nextMusic.split('//')[1:]
                 try:
                     if source=="net":
                         downloadMusicByHttpRequest(names[num],urls[num])
@@ -402,8 +401,9 @@ class Application(Application_ui):
             else:
                 time.sleep(0.1)
                 # pygame.mixer.music
-                # print(pygame.mixer.music.get_pos())
-                # self.Slider1.set(600*pygame.mixer.music.get_pos()/songtime)
+                print(str(int(600*(pygame.mixer.music.get_pos()/(songtime*1000)))))
+                self.Slider1.set(int(600*(pygame.mixer.music.get_pos()/(songtime*1000))))
+                self.ProgressBar1.setvar("variable",StringVar(value=(str(int(100*(pygame.mixer.music.get_pos()/(songtime*1000)))))))
                 # Slider1.set(pygame.mixer.music.)
                 # ProgressBar1.set(key, value, coded_value)
                 seta=num-1
@@ -494,18 +494,25 @@ class Application(Application_ui):
         self.NextSong['state'] = 'normal'
         self.PreSong['state'] = 'normal'
         # 选择要播放的音乐文件夹
-        global folder,res,source
+        global folder,res,source,floder_path
         if self.Play['text'] == '播放':
             folder = tkFileDialog.askdirectory()
             if not folder:
                 return
             source="path"
             self.Play['text']='暂停'
-            musics = [folder + '\\' + music
+            musics = [folder + '//' + music
                 for music in os.listdir(folder) \
                         \
                 if music.endswith(('.mp3', '.wav', '.ogg'))]
             res = musics
+            floder_path=folder
+            names=[]
+            for song in musics:
+                names.append(song.split('//')[1:])
+                pass
+            print(names)
+
             self.Set_ResaultBox(res)
             global playing
             playing = True
@@ -536,19 +543,25 @@ class Application(Application_ui):
         global folder
         global res
         global playing
-        global num,source
+        global num,source,names,floder_path
         folder = tkFileDialog.askdirectory()
         playing = False
         print(folder)
         if not folder:
             return
         source="path"
-        musics = [folder + '\\' + music
+        musics = [folder + '//' + music
             for music in os.listdir(folder) \
                     \
             if music.endswith(('.mp3', '.wav', '.ogg'))]
         res = musics
-        print(res)
+        floder_path=folder
+        names=[]
+        for song in musics:
+            names.append(song.split('//')[1:])
+            pass
+        print(names)
+        # print(res)
         self.Set_ResaultBox(res)
         if not playing:
             self.Set_ResaultBox(res)
@@ -581,7 +594,7 @@ class Application(Application_ui):
         self.ResaultBox.delete(0,END)
         # add song name to box
         for item in res:
-            self.ResaultBox.insert(END,item.split('\\')[1:])
+            self.ResaultBox.insert(END,item.split('//')[1:])
             # if self.ResaultBox.size() > 1:
             #     self.ResaultBox.itemconfig(0,fg="#4B0082")  
             # else:
@@ -594,7 +607,7 @@ class Application(Application_ui):
         print(self.ResaultBox.curselection()[0] ) 
         filename =  self.ResaultBox.get(self.ResaultBox.curselection())
         print(filename)
-        global playing
+        global playing,source
         # playing = False
         global num,res,names,urls
         if len(res) == num:
@@ -603,7 +616,8 @@ class Application(Application_ui):
             num=int(self.ResaultBox.curselection()[0])
             print("NUM:self.ResaultBox.curselection()++++ "+str(num))
             try:
-                downloadMusicByHttpRequest(names[num],urls[num])
+                if source=="net":
+                    downloadMusicByHttpRequest(names[num],urls[num])
             except :
                 print("dlerr")            
             if num>len(res)-1:
