@@ -11,6 +11,7 @@ import time
 
 import pygame
 import requests
+import librosa
 
 try:
     from tkinter import *
@@ -37,9 +38,11 @@ else:  #Python 3.x
     import http.cookiejar as cookielib
     print(f"python3.")
 
+source="path"
 folder = ''
 res = []
 num = 0
+songtime=0
 searching=False
 now_music = ''
 playing=False
@@ -102,7 +105,7 @@ class Application_ui(Frame):
         self.ProgressBar1 = Progressbar(self.top, orient='horizontal', maximum=100, variable=self.ProgressBar1Var)
         self.ProgressBar1.place(relx=0.153, rely=0.955, relwidth=0.833, relheight=0.034)
 
-        self.ProviderList = ['qq','网易云音乐','酷狗','酷我','虾米','百度',]
+        self.ProviderList = ['QQ音乐','网易云音乐','酷狗','酷我','虾米','百度',]
         self.Provider = Combobox(self.top, values=self.ProviderList, font=('宋体',9))
         self.Provider.place(relx=0.707, rely=0., relwidth=0.183, relheight=0.04)
         self.Provider.set(self.ProviderList[0])
@@ -266,10 +269,39 @@ class Application(Application_ui):
     def checkProvider(self,event=None):
         global ptname, provider
         print("checkProvider")
-        # self.Provider
+        _provider=""
+        _provider=self.Provider.get()
+        # ['QQ音乐','网易云音乐','酷狗','酷我','虾米','百度',]
+        if _provider=="QQ音乐": 
+            provider="qq" 
+            return
+        if _provider=="网易云音乐": 
+            provider="netease"
+            return
+        if _provider=="酷狗": 
+            provider="kugou"
+            return
+        if _provider=="酷我": 
+            provider="kuwo"
+            return
+        if _provider=="虾米": 
+            provider="xiami"
+            return
+        if _provider=="百度": 
+            provider="baidu"
+            return
+        if _provider=="喜马拉雅": 
+            provider="ximalaya"
+            return
+        _provider="qq"
+        return
+
+
 
     def Searcher(self,event=None):
-        global num,res,playing,searching,urls,names
+        self.checkProvider()
+        global num,res,playing,searching,urls,names,source
+        source="net"
         urls=[]
         names=[]
         searching = True
@@ -323,7 +355,7 @@ class Application(Application_ui):
             self.Search['text']='搜索'
 
     def Player(self,event=None):
-        global num,res,playing
+        global num,res,playing,songtime,source
         playing = True
         self.Play['text']='暂停'
         if len(res):
@@ -332,11 +364,17 @@ class Application(Application_ui):
             if not pygame.mixer.music.get_busy():
                 nextMusic = res[num]
                 try:
-                    downloadMusicByHttpRequest(names[num],urls[num])
+                    if source=="net":
+                        downloadMusicByHttpRequest(names[num],urls[num])
                 except :
                     print("dlerr")
                 print("now:"+str(num)+"     "+str(nextMusic))
                 try:
+                    # songtime = librosa.get_duration(filename=names[num])
+                    print("0000000000000")
+                    print(songtime)
+                    pygame.mixer.music.load(nextMusic.encode())
+                    pygame.mixer.music.play(1)
                     if self.ResaultBox.size() > 1:
                         for i in range(0,self.ResaultBox.size()):
                             self.ResaultBox.itemconfig(i,bg="#999999")  
@@ -346,8 +384,6 @@ class Application(Application_ui):
                         self.ResaultBox.itemconfig(self.ResaultBox.size()-1,fg="#000000")
                     self.ResaultBox.itemconfig(num,fg="#FFFFFF")
                     self.ResaultBox.itemconfig(num,bg="#6600FF")
-                    pygame.mixer.music.load(nextMusic.encode())
-                    pygame.mixer.music.play(1)
                 except :
                     print("ERRR")
                 if len(res)-1 == num:
@@ -358,12 +394,18 @@ class Application(Application_ui):
                 print("next:"+str(num)+"   "+res[num])
                 nextMusic = nextMusic.split('\\')[1:]
                 try:
-                    downloadMusicByHttpRequest(names[num],urls[num])
+                    if source=="net":
+                        downloadMusicByHttpRequest(names[num],urls[num])
                 except :
                     print("dlerr")
                 print('playing....' + ''.join(nextMusic))
             else:
                 time.sleep(0.1)
+                # pygame.mixer.music
+                # print(pygame.mixer.music.get_pos())
+                # self.Slider1.set(600*pygame.mixer.music.get_pos()/songtime)
+                # Slider1.set(pygame.mixer.music.)
+                # ProgressBar1.set(key, value, coded_value)
                 seta=num-1
                 if len(res)-1 == num:
                     seta = 0
@@ -452,11 +494,12 @@ class Application(Application_ui):
         self.NextSong['state'] = 'normal'
         self.PreSong['state'] = 'normal'
         # 选择要播放的音乐文件夹
-        global folder,res
+        global folder,res,source
         if self.Play['text'] == '播放':
             folder = tkFileDialog.askdirectory()
             if not folder:
                 return
+            source="path"
             self.Play['text']='暂停'
             musics = [folder + '\\' + music
                 for music in os.listdir(folder) \
@@ -493,12 +536,13 @@ class Application(Application_ui):
         global folder
         global res
         global playing
-        global num
+        global num,source
         folder = tkFileDialog.askdirectory()
         playing = False
         print(folder)
         if not folder:
             return
+        source="path"
         musics = [folder + '\\' + music
             for music in os.listdir(folder) \
                     \
@@ -516,7 +560,10 @@ class Application(Application_ui):
         return 
 
     def Search_Cmd(self, event=None):
-        global searching
+        global searching,source,playing
+        playing=False
+        source= "net"
+        self.checkProvider()
         #TODO, Please finish the function here!
         print("Search_Cmd")
         if not searching:
