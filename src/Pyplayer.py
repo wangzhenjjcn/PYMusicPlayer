@@ -44,8 +44,8 @@ res = []
 num = 0
 songtime=0
 searching=False
-now_music = ''
 playing=False
+now_music = ''
 urls=[]
 names=[]
 songList = {}
@@ -54,7 +54,7 @@ download_path = "./download/"
 floder_path= download_path
 tmp_path = "./tmp/"
 provider = "qq"
-ptname = "网易云音乐"
+ptname = "QQ云音乐"
 defaulturl = "http://music.sonimei.cn/"
 if not os.path.exists(download_path):
     os.mkdir(download_path)
@@ -268,33 +268,41 @@ class Application(Application_ui):
         Application_ui.__init__(self, master)
 
     def checkProvider(self,event=None):
-        global ptname, provider
+        global ptname, provider,ptname
         print("checkProvider")
         _provider=""
         _provider=self.Provider.get()
         # ['QQ音乐','网易云音乐','酷狗','酷我','虾米','百度',]
         if _provider=="QQ音乐": 
             provider="qq" 
+            ptname=self.Provider.get()
             return
         if _provider=="网易云音乐": 
             provider="netease"
+            ptname=self.Provider.get()
             return
         if _provider=="酷狗": 
             provider="kugou"
+            ptname=self.Provider.get()
             return
         if _provider=="酷我": 
             provider="kuwo"
+            ptname=self.Provider.get()
             return
         if _provider=="虾米": 
             provider="xiami"
+            ptname=self.Provider.get()
             return
         if _provider=="百度": 
             provider="baidu"
+            ptname=self.Provider.get()
             return
         if _provider=="喜马拉雅": 
             provider="ximalaya"
+            ptname=self.Provider.get()
             return
         _provider="qq"
+        ptname="QQ音乐"
         return
 
 
