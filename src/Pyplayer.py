@@ -1,5 +1,6 @@
-﻿#!/usr/bin/env python
-#-*- coding:utf-8 -*-
+﻿#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Author WangZhen <wangzhenjjcn@gmail.com> MIT Licenses
 
 import datetime
 import json
