@@ -4,3 +4,4 @@ wxpython
 BeautifulSoup4
 lxml
 pyinstaller
+pywin32
