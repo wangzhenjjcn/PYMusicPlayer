@@ -10,8 +10,6 @@ import re
 import sys
 import threading
 import time
-import math
-
 import pygame
 import requests
 import librosa
@@ -44,10 +42,7 @@ else:  #Python 3.x
 download_path = "./downloads/"
 tmp_path = "./tmp/"
 play_path="./downloads/"
-if not os.path.exists(download_path):
-    os.mkdir(download_path)
-if not os.path.exists(tmp_path):
-    os.mkdir(tmp_path)
+
 webSession = requests.session()
 webSession.cookies = cookielib.LWPCookieJar(filename=tmp_path+"cookie.txt")
 defaultHeader = {
@@ -105,6 +100,10 @@ class Application_ui(Frame):
         self.master.geometry('837x494')
         self.master.resizable(0,0)
         self.createWidgets()
+        if not os.path.exists(download_path):
+            os.mkdir(download_path)
+        if not os.path.exists(tmp_path):
+            os.mkdir(tmp_path)
 
     def createWidgets(self):
         self.top = self.winfo_toplevel()
@@ -176,7 +175,6 @@ class Application(Application_ui):
         Application_ui.__init__(self, master)
         global datas,filenames,defaultHeader,ajaxheaders,download_path,tmp_path,play_path,webSession,current_index,local,code,p,stype,nowThreads,downloadingThreads,downloading,playing,searching,word,backsyc
 
-       
 
     def checkType(self,event=None):
         global datas,filenames,defaultHeader,ajaxheaders,download_path,tmp_path,play_path,webSession,current_index,local,code,p,stype,nowThreads,downloadingThreads,downloading,playing,searching,word
