@@ -175,8 +175,7 @@ class Application(Application_ui):
     def __init__(self, master=None):
         Application_ui.__init__(self, master)
         global datas,filenames,defaultHeader,ajaxheaders,download_path,tmp_path,play_path,webSession,current_index,local,code,p,stype,nowThreads,downloadingThreads,downloading,playing,searching,word,backsyc
-        b = threading.Thread(target=self.backSync)
-        b.start()
+
        
 
     def checkType(self,event=None):
