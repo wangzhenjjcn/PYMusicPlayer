@@ -61,6 +61,7 @@ ajaxheaders = {
 data_resault=[]
 data_download=[]
 data_playing=[]
+current_Playing=-1
 #global data_resault,data_download,data_playing
 
 class Application_ui(Frame):
@@ -249,6 +250,7 @@ class Application(Application_ui):
 
     def Searcher(self,event=None):
         global data_resault
+        data_resault=[]
         if self.ResaultList.size()>0:
             if self.ResaultList.get(0)=="ResaultList":
                 self.ResaultList.delete(0,END)        
@@ -294,6 +296,7 @@ class Application(Application_ui):
                 print("data none")
             self.setFileFormartAndSettings()
             self.searchUnLock()
+            # data_resault=datas.copy()
 
     def Downloader(self,event=None):
         if self.DownloadList.size()>0:
@@ -309,6 +312,7 @@ class Application(Application_ui):
                 if not os.path.exists(data['path']):
                     os.mkdir(data['path']) 
             if "filename" in data and  "path" in data and "quality" in data and "id" in data:
+                self.DownloadFrame['text']="正在下载："+data['filename']
                 downloadMusicById(data['path'],data['filename'],getProvider(self.Provider),code,data['id'],data['quality'])
             if data['download_lrc'] :
                 downloadFile(data['path'],re.sub(r'[\/:*?"<>|]','-',(data['singer']+"-"+data['name']+".lrc")),data['lrc'])
@@ -320,7 +324,8 @@ class Application(Application_ui):
             if len(self.PlayList.curselection())<1 and self.PlayList.size()>0:
                     self.PlayList.select_set(0)  
 
-        self.downloadUnLock()    
+        self.downloadUnLock()  
+        self.DownloadFrame['text']="正在下载："  
 
     def Player(self,event=None):
         if(self.PlayList.size()<1 or len(self.PlayList.curselection())<1):
@@ -331,8 +336,28 @@ class Application(Application_ui):
         songtime=0
         lrc={}
         lrcword=""
-        while self.Play['text']=="停止" and len(self.PlayList.curselection())>0:    
-            if   pygame.mixer.music.get_busy()==False and self.PlayList.size()>0: 
+        while self.Play['text']!="播放" and len(self.PlayList.curselection())>0:    
+            if   pygame.mixer.music.get_busy()==False and self.PlayList.size()>0 and self.Play['text']!="播放": 
+                if pygame.mixer.music.get_busy() != False:
+                    try:
+                        pygame.mixer.music.stop()
+                    except Exception as e:
+                        print(e)
+                    return
+                if self.PlayList.size() < 1:
+                    try:
+                        pygame.mixer.music.stop()
+
+                    except Exception as e:
+                        print(e)
+                        return
+                if self.Play['text'] == "播放":
+                    try:
+                        pygame.mixer.music.stop()
+
+                    except Exception as e:
+                        print(e)
+                        return
                 lrc={}
                 lrcword=""
                 if current_index==-1:
@@ -376,7 +401,7 @@ class Application(Application_ui):
                     if str(dtime) in lrc:
                         lrcword=lrc[str(dtime)]
                 self.PlayFrame['text']="正在播放："+song['filename']+"  "+str(lrcword)
-                
+        self.Play['text']="播放" 
         return 
 
     def searchUnLock(self,event=None):
@@ -452,6 +477,7 @@ class Application(Application_ui):
                     pygame.mixer.music.set_volume((self.Volume.get()/100))
             except:
                 print("StopERR PlayINgStop")
+                
                 pass
 
     def setFileFormartAndSettings(self,event=None):
@@ -590,8 +616,31 @@ class Application(Application_ui):
     def PlayListDoubleClick(self, event=None):
         #TODO, Please finish the function here!
         print("PlayListDoubleClick")
-        self.Play_Cmd()
+        if  self.Play['text']=="播放":
+            self.Play['text']="停止"
+            p = threading.Thread(target=self.Player)
+            p.start()
+            pass
+        else:
+            
+             
+            try:
+                if pygame.mixer.music.get_busy():
+                     
+                   
+                    pygame.mixer.music.stop()
+            except Exception as e:
+                print(e)
+                print("StopERR PlayINgStop")
+                self.Play['text']=="播放"
+
+                try:                     
+                    pygame.mixer.quit()
+                except Exception as e2:
+                    print(e2)
+                pass
         pass
+
 
     def ResaultListDoubleClick(self, event=None):
         #TODO, Please finish the function here!
@@ -784,14 +833,14 @@ class Application(Application_ui):
                 data[2]['download_lrc']=self.DownloadLrcVar.get()
                 data[2]['creat_path']=self.CreatSingerPathVar.get()
                 if self.HighQualityVar.get():
-                    data_download.append(data[0])
-                    insertDataToListbox(data[0],self.DownloadList,END)
+                    data_download.append(data[0].copy())
+                    insertDataToListbox(data[0].copy(),self.DownloadList,END)
                 if self.MidQualityVar.get():
-                    data_download.append(data[1])
-                    insertDataToListbox(data[1],self.DownloadList,END)
+                    data_download.append(data[1]).copy()
+                    insertDataToListbox(data[1].copy(),self.DownloadList,END)
                 if self.LowQualityVar.get():
-                    data_download.append(data[2])
-                    insertDataToListbox(data[2],self.DownloadList,END)
+                    data_download.append(data[2].copy())
+                    insertDataToListbox(data[2].copy(),self.DownloadList,END)
             d= threading.Thread(target=self.Downloader)
             d.start()
         else:
@@ -805,13 +854,21 @@ class Application(Application_ui):
              
             pass
         else:
+            self.Play['text']=="播放"
             try:
                 if pygame.mixer.music.get_busy():
-                    self.PlayList.select_clear()
-                    pygame.mixer.music.stop()
                     self.Play['text']="播放"
-            except:
+                    self.PlayList.delete(0,END)
+                    pygame.mixer.music.stop()
+            except Exception as e:
+                print(e)
                 print("StopERR PlayINgStop")
+                self.Play['text']=="播放"
+
+                try:                     
+                    pygame.mixer.quit()
+                except Exception as e2:
+                    print(e2)
                 pass
         pass
 
@@ -824,11 +881,34 @@ class Application(Application_ui):
             self.PlayList.select_set(0)  
         else:
             self.PlayList.select_set(self.PlayList.curselection()[0]+1)
-        self.Play_Cmd()
-        pass
+            if  self.Play['text']=="播放":
+                self.Play['text']="停止"
+                p = threading.Thread(target=self.Player)
+                p.start()
+                pass
+            else:
+                
+                self.Play['text']=="播放"
+                try:
+                    if pygame.mixer.music.get_busy():
+                        self.Play['text']="播放"
+                    
+                        pygame.mixer.music.stop()
+                except Exception as e:
+                    print(e)
+                    print("StopERR PlayINgStop")
+                    self.Play['text']=="播放"
 
-        pass
+                    try:                     
+                        pygame.mixer.quit()
+                    except Exception as e2:
+                        print(e2)
+                     
+             
+         
 
+         
+ 
     def Pre_Song_Cmd(self, event=None):
         #TODO, Please finish the function here!
         if(self.PlayList.size()<1 or len(self.PlayList.curselection())<1):
@@ -838,11 +918,32 @@ class Application(Application_ui):
             self.PlayList.select_set(0)  
         else:
             self.PlayList.select_set(self.PlayList.curselection()[0]-1)
-        self.Play_Cmd()
-        pass
+            if  self.Play['text']=="播放":
+                self.Play['text']="停止"
+                p = threading.Thread(target=self.Player)
+                p.start()
+                pass
+            else:
+                
+                self.Play['text']=="播放"
+                try:
+                    if pygame.mixer.music.get_busy():
+                        self.Play['text']="播放"
+                    
+                        pygame.mixer.music.stop()
+                except Exception as e:
+                    print(e)
+                    print("StopERR PlayINgStop")
+                    self.Play['text']=="播放"
+
+                    try:                     
+                        pygame.mixer.quit()
+                    except Exception as e2:
+                        print(e2)
 
     def Pause_Cmd(self, event=None):
         #TODO, Please finish the function here!
+        self.Play_Cmd()
         pass
 
     def Play_Cmd(self, event=None):
@@ -853,13 +954,30 @@ class Application(Application_ui):
             p.start()
             pass
         else:
-            self.Stop_Cmd()
+            
+            self.Play['text']=="播放"
+            try:
+                if pygame.mixer.music.get_busy():
+                    self.Play['text']="播放"
+                   
+                    pygame.mixer.music.stop()
+            except Exception as e:
+                print(e)
+                print("StopERR PlayINgStop")
+                self.Play['text']=="播放"
+
+                try:                     
+                    pygame.mixer.quit()
+                except Exception as e2:
+                    print(e2)
+                pass
+        pass
 
 
 
     def Open_Path_Cmd(self, event=None):
         #TODO, Please finish the function here!
-        os.startfile(download_path)
+        os.startfile(os.path.abspath(download_path))
         pass
 
 def insertDataToListbox(data,box,position):
@@ -1206,6 +1324,17 @@ def getSongFilename(song):
 
 def stopThreads():
     print("to do stopthreads")
+    try:
+        if pygame.mixer.music.get_busy():
+            pygame.mixer.music.stop()
+            pygame.mixer.quit()
+    except Exception as e:
+        print(e)
+        
+        try:                     
+            pygame.mixer.quit()
+        except Exception as e2:
+            print(e2)
 
 def closeWindow():
     try:
