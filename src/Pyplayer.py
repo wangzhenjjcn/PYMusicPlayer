@@ -17,14 +17,14 @@ import librosa
 try:
     from tkinter import *
 except ImportError:  #Python 2.x
-    PythonVersion = 2
-    from Tkinter import *
-    from tkFont import Font
-    from ttk import *
-    import cookielib
-    #Usage:showinfo/warning/error,askquestion/okcancel/yesno/retrycancel
-    from tkMessageBox import *
     print(f"python2.")
+    # PythonVersion = 2
+    # from Tkinter import *
+    # from tkFont import Font
+    # from ttk import *
+    # import cookielib
+    # #Usage:showinfo/warning/error,askquestion/okcancel/yesno/retrycancel
+    # from tkMessageBox import *
     #Usage:f=tkFileDialog.askopenfilename(initialdir='E:/Python')
     #import tkFileDialog
     #import tkSimpleDialog
@@ -36,8 +36,8 @@ else:  #Python 3.x
     import tkinter.filedialog as tkFileDialog
     import tkinter.simpledialog as tkSimpleDialog    #askstring()
     import tkinter
-    import http.cookiejar as cookielib
     print(f"python3.")
+import http.cookiejar as cookielib
 
 download_path = "./downloads/"
 tmp_path = "./tmp/"
@@ -173,7 +173,7 @@ class Application(Application_ui):
     #这个类实现具体的事件处理回调函数。界面生成代码在Application_ui中。              
     def __init__(self, master=None):
         Application_ui.__init__(self, master)
-        global datas,filenames,defaultHeader,ajaxheaders,download_path,tmp_path,play_path,webSession,current_index,local,code,p,stype,nowThreads,downloadingThreads,downloading,playing,searching,word,backsyc
+        # global datas,filenames,defaultHeader,ajaxheaders,download_path,tmp_path,play_path,webSession,current_index,local,code,p,stype,nowThreads,downloadingThreads,downloading,playing,searching,word,backsyc
 
 
     def checkType(self,event=None):
