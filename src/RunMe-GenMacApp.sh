@@ -1,1 +1,1 @@
-pyinstaller -F -w  Pyplayer.py  
+pyinstaller -F -w  Player.py  

@@ -4,4 +4,7 @@ wxpython
 BeautifulSoup4
 lxml
 pyinstaller
+pygame
+librosa
 pywin32
+
